@@ -2,6 +2,13 @@ plugins {
     id("org.jreleaser") version "1.18.0" apply false
 }
 
+def descriptions = [
+        "jchdir": "Simple java library to change current working directory",
+        "jchdir-native-ffm": "Native implementation of chdir with FFM api",
+        "jchdir-native-jna": "Native implementation of chdir with JNA",
+        "jchdir-native-jni": "Native implementation of chdir with JNI",
+]
+
 subprojects { subProject ->
 
     subProject.plugins.apply('maven-publish')
@@ -9,7 +16,7 @@ subprojects { subProject ->
     subProject.plugins.apply('signing')
     subProject.plugins.apply('org.jreleaser')
     subProject.group = "io.github.zebalu"
-    subProject.version = '0.0.1'
+    subProject.version = '0.0.2-RELEASE'
 
     subProject.publishing {
         publications {
@@ -18,8 +25,8 @@ subprojects { subProject ->
 
                 // Add POM metadata for Maven Central requirements
                 pom {
-                    name = project.name
-                    description = project.description
+                    name = subProject.name
+                    description = { descriptions[subProject.name] }()
                     url = 'https://github.com/zebalu/change-dir'
                     licenses {
                         license {
@@ -40,6 +47,11 @@ subprojects { subProject ->
                         url = 'https://github.com/zebalu/change-dir'
                     }
                 }
+            }
+        }
+        repositories {
+            maven {
+                url = layout.buildDirectory.dir('staging-deploy')
             }
         }
     }
@@ -66,6 +78,11 @@ subprojects { subProject ->
         signing {
             active = 'ALWAYS'
             armored = true
+            passphrase = subProject.properties.get("doGpg")
+            //publicKey = 'ed25519'
+            publicKey = new File(new File(System.getProperty("user.home")),".gnupg/secret/public.pgp").text
+            secretKey = new File(new File(System.getProperty("user.home")),".gnupg/secret/private.pgp").text
+
         }
         checksum {
             algorithms = ['SHA-256','SHA-512']
@@ -94,7 +111,7 @@ subprojects { subProject ->
                     sonatype {
                         active='ALWAYS'
                         url = 'https://central.sonatype.com/api/v1/publisher'
-                        stagingRepository('target/staging-deploy')
+                        stagingRepository(layout.buildDirectory.dir('staging-deploy').get().asFile.absolutePath)
                     }
                 }
             }
