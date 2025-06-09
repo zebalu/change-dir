@@ -1,7 +1,13 @@
+plugins {
+    id("org.jreleaser") version "1.18.0" apply false
+}
+
 subprojects { subProject ->
+
     subProject.plugins.apply('maven-publish')
     subProject.plugins.apply('java-library')
     subProject.plugins.apply('signing')
+    subProject.plugins.apply('org.jreleaser')
     subProject.group = "io.github.zebalu"
     subProject.version = '0.0.1'
 
@@ -46,16 +52,52 @@ subprojects { subProject ->
     }
 
     subProject.signing {
-        // This tells the signing plugin to use your GPG key.
-        // It will typically look for a key in your GPG keyring.
-        // Ensure your GPG private key is available to the Gradle process.
-        // You can set the passphrase as an environment variable or in gradle.properties
-        // signing.password = environment('GPG_PASSPHRASE')
-        useGpgCmd() // Use the GPG command line tool
-        // Or you can specify a key if you have multiple:
+        if (subProject.hasProperty("doGpg")) {
+            sign publishing.publications
+            useGpgCmd()
+        }
         // sign([publishing.publications.mavenJava])
         // The key ID should be the long key ID or the email associated with the key
         // signing.keyId = 'YOUR_GPG_KEY_ID'
         // signing.secretKeyRingFile = file('/path/to/your/secring.gpg') // Only if you have a custom keyring location
+    }
+
+    subProject.jreleaser {
+        signing {
+            active = 'ALWAYS'
+            armored = true
+        }
+        checksum {
+            algorithms = ['SHA-256','SHA-512']
+        }
+        distributions {
+            'maven-central' { // Name of your distribution
+                active = 'ALWAYS'
+                artifacts {
+                    artifact {
+                        path = 'build/libs/' + project.name + '-' + project.version + '.jar' // Path to your main JAR
+                    }
+                    artifact {
+                        path = 'build/libs/' + project.name + '-' + project.version + '-sources.jar' // Path to sources JAR
+                        //classifier = 'sources'
+                    }
+                    artifact {
+                        path = 'build/libs/' + project.name + '-' + project.version + '-javadoc.jar' // Path to Javadoc JAR
+                        //classifier = 'javadoc'
+                    }
+                }
+            }
+        }
+        deploy {
+            maven {
+                mavenCentral {
+                    sonatype {
+                        active='ALWAYS'
+                        url = 'https://central.sonatype.com/api/v1/publisher'
+                        stagingRepository('target/staging-deploy')
+                    }
+                }
+            }
+        }
     }
 }
