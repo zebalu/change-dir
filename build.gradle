@@ -16,7 +16,7 @@ subprojects { subProject ->
     subProject.plugins.apply('signing')
     subProject.plugins.apply('org.jreleaser')
     subProject.group = "io.github.zebalu"
-    subProject.version = '0.0.2-RELEASE'
+    subProject.version = '1.0.0'
 
     subProject.publishing {
         publications {
