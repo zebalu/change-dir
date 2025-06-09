@@ -210,19 +210,4 @@ public final class ChangeDir {
     public Path getCWDPath() {
         return Path.of(getCWD());
     }
-
-    public static void main(String[] args) {
-        var inst = getInstance();
-        File dotF = new File("");
-        Path dotP = Path.of("");
-        System.out.println(dotF.getAbsolutePath());
-        System.out.println(dotP.toAbsolutePath());
-
-        inst.changeDir("..");
-        File dotF2 = new File("");
-        Path dotP2 = Path.of("");
-        System.out.println(dotF2.getAbsolutePath());
-        System.out.println(dotP2.toAbsolutePath());
-    }
-
 }
