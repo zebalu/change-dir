@@ -1,0 +1,61 @@
+subprojects { subProject ->
+    subProject.plugins.apply('maven-publish')
+    subProject.plugins.apply('java-library')
+    subProject.plugins.apply('signing')
+    subProject.group = "io.github.zebalu"
+    subProject.version = '0.0.1'
+
+    subProject.publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                from components.java
+
+                // Add POM metadata for Maven Central requirements
+                pom {
+                    name = project.name
+                    description = project.description
+                    url = 'https://github.com/zebalu/change-dir'
+                    licenses {
+                        license {
+                            name = 'Apache-2.0'
+                            url = 'https://www.apache.org/licenses/LICENSE-2.0.txt'
+                        }
+                    }
+                    developers {
+                        developer {
+                            id = 'zebalu'
+                            name = 'Balázs Zaicsek'
+                            email = 'zebalu@gmail.com'
+                        }
+                    }
+                    scm {
+                        connection = 'scm:git:git://github.com/zebalu/change-dir.git'
+                        developerConnection = 'scm:git:ssh://github.com:zebalu/change-dir.git'
+                        url = 'https://github.com/zebalu/change-dir'
+                    }
+                }
+            }
+        }
+    }
+
+    subProject.tasks.withType(Jar) {
+        into("META-INF/maven/$project.group/$project.name") {
+            from { generatePomFileForMavenJavaPublication }
+            rename ".*", "pom.xml"
+        }
+    }
+
+    subProject.signing {
+        // This tells the signing plugin to use your GPG key.
+        // It will typically look for a key in your GPG keyring.
+        // Ensure your GPG private key is available to the Gradle process.
+        // You can set the passphrase as an environment variable or in gradle.properties
+        // signing.password = environment('GPG_PASSPHRASE')
+        useGpgCmd() // Use the GPG command line tool
+        // Or you can specify a key if you have multiple:
+        // sign([publishing.publications.mavenJava])
+        // The key ID should be the long key ID or the email associated with the key
+        // signing.keyId = 'YOUR_GPG_KEY_ID'
+        // signing.secretKeyRingFile = file('/path/to/your/secring.gpg') // Only if you have a custom keyring location
+    }
+}
